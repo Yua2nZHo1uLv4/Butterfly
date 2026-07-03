@@ -274,20 +274,3 @@ world.onPress(({ entity, button }) => {
     entity.player.lastClick.r = Date.now()
   }
 })
-//删除无人的泡泡
-setInterval(async () => {
-  let i: number;
-  for ((() => { i = map.length; i-- })(); i >= 0; i--) {
-    if (map[i].id >= 0) {
-      let isPlayerIn = false
-      for (let e of map[i].entitys) {
-        if (e.tags.includes('player')) {
-          isPlayerIn = true
-        }
-      }
-      if (!isPlayerIn) {
-        map.splice(i, 1)
-      }
-    }
-  }
-}, 1000)
