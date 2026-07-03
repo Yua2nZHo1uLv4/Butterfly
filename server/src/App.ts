@@ -117,7 +117,7 @@ remoteChannel.onServerEvent(async ({ entity, args }) => {
 })
 world.onPlayerJoin(async ({ entity }) => {
   entity.enableDamage = true
-  entity.player.bubbleId = 0
+  entity.player.bubbleId = -1
   entity.player.spectator = true
   entity.player.lastClick = {
     r: Date.now(),
