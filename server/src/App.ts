@@ -45,7 +45,7 @@ map.push(new Bubble(
   1000,
   ''
 ))
-map[0].id = 0
+map[0].id = -1//id为-1大厅
 //处理玩家的数据同步
 setInterval(() => {
   world.querySelectorAll('player').forEach(e => {
@@ -111,6 +111,7 @@ remoteChannel.onServerEvent(async ({ entity, args }) => {
     const player = entity.player.bubbleEntity as Entity
     if (!targetEntity) { return }
     if (targetEntity.tags.includes('NPC')) {
+      //互动事件处理器
     }
   }
 })
@@ -273,3 +274,20 @@ world.onPress(({ entity, button }) => {
     entity.player.lastClick.r = Date.now()
   }
 })
+//删除无人的泡泡
+setInterval(async () => {
+  let i: number;
+  for ((() => { i = map.length; i-- })(); i >= 0; i--) {
+    if (map[i].id >= 0) {
+      let isPlayerIn = false
+      for (let e of map[i].entitys) {
+        if (e.tags.includes('player')) {
+          isPlayerIn = true
+        }
+      }
+      if (!isPlayerIn) {
+        map.splice(i, 1)
+      }
+    }
+  }
+}, 1000)
