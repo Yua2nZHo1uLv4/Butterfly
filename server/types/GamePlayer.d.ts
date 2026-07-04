@@ -17,6 +17,10 @@ declare interface GamePlayer extends GamePlayer {
    */
   bubbleEntity: Entity,
   /**
+   * 玩家在镜像泡泡中的实体
+   */
+  antiBubbleEntity: Entity,
+  /**
    * 用于优化，反触发
    */
   lastDate: number,

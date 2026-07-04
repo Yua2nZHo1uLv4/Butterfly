@@ -45,7 +45,12 @@ map.push(new Bubble(
   1000,
   ''
 ))
-map[0].id = -1//id为-1大厅
+map[0].id = 1//id为-1大厅
+map.push(new Bubble(
+  1000,
+  ''
+))
+map[1].id = -1//id为-1镜像大厅
 //处理玩家的数据同步
 setInterval(() => {
   world.querySelectorAll('player').forEach(e => {
@@ -117,13 +122,22 @@ remoteChannel.onServerEvent(async ({ entity, args }) => {
 })
 world.onPlayerJoin(async ({ entity }) => {
   entity.enableDamage = true
-  entity.player.bubbleId = -1
+  entity.player.bubbleId = 1
   entity.player.spectator = true
   entity.player.lastClick = {
     r: Date.now(),
     l: Date.now()
   }
   entity.player.bubbleEntity = map[0].creatEntity({
+    position: new Vector((Math.random() * 200 - 10), (Math.random() * 200 - 10)),
+    tags: ['player', entity.player.userId],
+    size: new Vector(100, 100),
+    name: entity.player.name,
+    face: new Vector(-1, 0),
+    image: 'picture/player.png',
+    opacity: 1
+  })
+  entity.player.antiBubbleEntity = map[1].creatEntity({
     position: new Vector((Math.random() * 200 - 10), (Math.random() * 200 - 10)),
     tags: ['player', entity.player.userId],
     size: new Vector(100, 100),
@@ -168,6 +182,14 @@ world.onPlayerLeave(({ entity }) => {
         }
       }
     })
+    const nowAntiBubble = (map.find(d => d.id == -nowBubble.id)) as Bubble
+    nowBubble.entitys.forEach(e => {
+      if (e.tags.includes('playerItem')) {
+        if (e.tags[1] == entity.player.userId) {
+          e.destory(nowAntiBubble)
+        }
+      }
+    })
     entity.player.bubbleEntity.destory((map.find(d => d.id == entity.player.bubbleId)) as Bubble)
   }
 })
@@ -188,6 +210,14 @@ function changeBubble(entity: GamePlayerEntity, mode: 'id' | 'index' = 'index', 
         }
       }
     })
+    const nowAntiBubble = (map.find(d => d.id == -nowBubble.id)) as Bubble
+    nowAntiBubble.entitys.forEach(e => {
+      if (e.tags.includes('playerItem')) {
+        if (e.tags[1] == entity.player.userId) {
+          e.destory(nowAntiBubble)
+        }
+      }
+    })
     if (entity.player.bubbleEntity) {
       entity.player.bubbleEntity.destory(nowBubble)
     }
@@ -201,8 +231,18 @@ function changeBubble(entity: GamePlayerEntity, mode: 'id' | 'index' = 'index', 
       image: 'picture/player.png',
       opacity: 1
     })
+    entity.player.antiBubbleEntity = (map.find(b => b.id = -entity.player.bubbleId) as Bubble).creatEntity({
+      position: intoPosition,
+      tags: ['player', entity.player.userId],
+      size: new Vector(100, 100),
+      name: entity.player.name,
+      face: new Vector(-1, 0),
+      image: 'picture/player.png',
+      opacity: 1
+    })
   } else {
     const targerBubbleIndex = map.findIndex(d => d.id == id)
+    const targerAntiBubbleIndex = map.findIndex(d => d.id == -id)
     if (targerBubbleIndex != -1) {
       const nowBubble = (map.find(d => d.entitys.includes(entity.player.bubbleEntity))) as Bubble
       nowBubble.entitys.forEach(e => {
@@ -212,11 +252,30 @@ function changeBubble(entity: GamePlayerEntity, mode: 'id' | 'index' = 'index', 
           }
         }
       })
+      const nowAntiBubble = (map.find(d => d.id == -nowBubble.id)) as Bubble
+      nowAntiBubble.entitys.forEach(e => {
+        if (e.tags.includes('playerItem')) {
+          if (e.tags[1] == entity.player.userId) {
+            e.destory(nowAntiBubble)
+          }
+        }
+      })
       if (entity.player.bubbleEntity) {
         entity.player.bubbleEntity.destory((map.find(d => d.id == entity.player.bubbleId)) as Bubble)
       }
+      if (entity.player.antiBubbleEntity) {
+        entity.player.antiBubbleEntity.destory((map.find(d => d.id == entity.player.bubbleId)) as Bubble)
+      }
       entity.player.bubbleId = map[targerBubbleIndex].id
       entity.player.bubbleEntity = map[targerBubbleIndex].creatEntity({
+        position: intoPosition,
+        tags: ['player', entity.player.userId],
+        size: new Vector(100, 100),
+        name: entity.player.name,
+        face: new Vector(-1, 0),
+        image: 'picture/player.png'
+      })
+      entity.player.antiBubbleEntity = map[targerAntiBubbleIndex].creatEntity({
         position: intoPosition,
         tags: ['player', entity.player.userId],
         size: new Vector(100, 100),
@@ -274,3 +333,18 @@ world.onPress(({ entity, button }) => {
     entity.player.lastClick.r = Date.now()
   }
 })
+world.onPress(({ entity, button }) => {
+  if (button == GameButtonType.ACTION0) {
+    anti(entity)
+  }
+})
+/**
+ * 把某个玩家送到镜像空间
+ * @param entity 目标玩家
+ */
+function anti(entity: GamePlayerEntity) {
+  entity.player.bubbleId = -entity.player.bubbleId
+  const e2 = entity.player.antiBubbleEntity
+  entity.player.antiBubbleEntity = entity.player.bubbleEntity
+  entity.player.bubbleEntity = e2
+}
